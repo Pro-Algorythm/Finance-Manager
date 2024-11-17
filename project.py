@@ -16,38 +16,39 @@ import matplotlib.pyplot as plt
 Run the following command to install all dependencies:
 pip install -r requirements.txt
 
-
+Sample account:
+Username : sample
+Password : 1
 
 """
 
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('-w', '--write', action = 'store_true')
-    parser.add_argument('-r', '--read', action = 'store_true')
+    parser.add_argument('-d', '--diary', choices = ['write', 'read', 'del'])
     parser.add_argument('-u', '--gui', action = 'store_true')
-    parser.add_argument('-d', '--delete', action = 'store_true')
-    parser.add_argument('-dd', '--delete_entry', action = 'store_true')
+    parser.add_argument('-t', '--terminate', action = 'store_true')
     parser.add_argument('-f', '--finance', choices = ['read', 'append', 'del'])
-    parser.add_argument('-st', '--stats', action = 'store_true')
-    parser.add_argument('-se', '--search', choices = ['finance', 'diary'])
-    parser.add_argument('-re', '--report', action = 'store_true')
+    parser.add_argument('-s', '--stats', action = 'store_true')
+    parser.add_argument('-q', '--query', choices = ['finance', 'diary'])
+    parser.add_argument('-r', '--report', action = 'store_true')
     args = parser.parse_args()
     if args.gui:
         GUI()
-    elif args.write:
-        write(authenticate(input('Name : '),input('Password : ')), input('Date of diary entry(leave empty to input todays date) \nFormat : dd/mm/yyyy: '), input('Category: '), input_entry())
-    elif args.read:
-        read(authenticate(input('Name : '),input('Password : ')), input('Date of diary entry (dd/mm/yyyy):'))
+    elif args.diary:
+        if args.diary == 'write':
+            write(authenticate(input('Name : '),input('Password : ')), input('Date of diary entry(leave empty to input todays date) \nFormat : dd/mm/yyyy: '), input('Category: '), input_entry())
+        elif args.diary == 'read':
+            read(authenticate(input('Name : '),input('Password : ')), input('Date of diary entry (dd/mm/yyyy):'))
+        else:
+            delete_entry(authenticate(input('Name : '),input('Password : ')), input('Date of diary entry (dd/mm/yyyy): '))
     elif args.finance in ['read', 'append']:
         finance(authenticate(input('Name : '),input('Password : ')), args.finance)
     elif args.finance == 'del':
         delete_transaction(authenticate(input('Name : '),input('Password : ')), input('Transaction ID : '))
     elif args.delete:
         del_acc(authenticate(input('Name : '),input('Password : ')))
-    elif args.delete_entry:
-        delete_entry(authenticate(input('Name : '),input('Password : ')), input('Date of diary entry (dd/mm/yyyy): '))
-    elif args.stats:
+    elif args.query:
         stats(authenticate(input('Name : '),input('Password : ')))
     elif args.search:
         search_cli(authenticate(input('Name : '),input('Password : ')), args.search)
