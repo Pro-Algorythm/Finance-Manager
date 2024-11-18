@@ -20,18 +20,19 @@ Sample account:
 Username : sample
 Password : 1
 
+
 """
 
 
 def main():
     parser = ArgumentParser()
     parser.add_argument('-d', '--diary', choices = ['write', 'read', 'del'])
-    parser.add_argument('-u', '--gui', action = 'store_true')
-    parser.add_argument('-t', '--terminate', action = 'store_true')
     parser.add_argument('-f', '--finance', choices = ['read', 'append', 'del'])
     parser.add_argument('-s', '--stats', action = 'store_true')
     parser.add_argument('-q', '--query', choices = ['finance', 'diary'])
     parser.add_argument('-r', '--report', action = 'store_true')
+    parser.add_argument('-u', '--gui', action = 'store_true')
+    parser.add_argument('-t', '--terminate', action = 'store_true')
     args = parser.parse_args()
     if args.gui:
         GUI()
@@ -46,12 +47,12 @@ def main():
         finance(authenticate(input('Name : '),input('Password : ')), args.finance)
     elif args.finance == 'del':
         delete_transaction(authenticate(input('Name : '),input('Password : ')), input('Transaction ID : '))
-    elif args.delete:
-        del_acc(authenticate(input('Name : '),input('Password : ')))
-    elif args.query:
+    elif args.terminate:
+        del_acc(authenticate(input('Name : '),input('Password : ')), gui = False)
+    elif args.stats:
         stats(authenticate(input('Name : '),input('Password : ')))
-    elif args.search:
-        search_cli(authenticate(input('Name : '),input('Password : ')), args.search)
+    elif args.query:
+        get_query_results(authenticate(input('Name : '),input('Password : ')), args.query)
     elif args.report:
         get_report(authenticate(input('Name : '),input('Password : ')))
     else:
@@ -90,7 +91,12 @@ def create_acc(name, password, bal, gui = False):
         os.chdir(os.pardir)
         return True
 
-def del_acc(name):
+def del_acc(name, gui = True):
+    if not gui:
+        if not input('Type y/n to confirm delete : ') in ['yes','y']:
+            print('Delete cancelled.')
+            return
+
     shutil.rmtree(f'{name}')
     with open('passwords.csv','r') as db:
         reader = csv.DictReader(db, fieldnames = ['username', 'password'])
@@ -104,6 +110,7 @@ def del_acc(name):
         writer = csv.DictWriter(db, fieldnames = ['username', 'password'])
         writer.writeheader()
         writer.writerows(rows[1::])
+    
 
 def input_entry():
     print("Entry (Type 'end' on a new line when done): \n\n")
@@ -229,13 +236,16 @@ def finance(name, action = 'append', date = None, detail = None, category = None
         if not gui:
             date = input('Date: ')
             detail = input('Detail: ')
+            if detail == '':
+                print('Detail cannot be empty.')
+                return
             categories = ['Loan', 'Education', 'Salary', 'Groceries', 'Utilities','Entertainment', 'Clothing', 'Transportation', 'Dining out', 'Miscellaneous']
+            category = input('Category: ')
             while True:
-                category = input('Choose from: \n' + '\n'.join(categories)+'\n'+'Category: ')
                 if category.title() in categories:
                     break
                 else:
-                    print('Invalid category.')
+                    category = input('Choose from \n' + '\n'.join(categories)+'\nCategory : ')
             while True:
                 try:
                     amount = float(input('Amount: '))
@@ -276,7 +286,7 @@ def finance(name, action = 'append', date = None, detail = None, category = None
             os.chdir(os.pardir)
             print('\nTransaction recorded.')
 
-def delete_transaction(name, transaction_id):
+def delete_transaction(name, transaction_id, gui=False):
     os.chdir(name)
     db = list(csv.DictReader(open('finance.csv', 'r')))
     transaction = None
@@ -307,27 +317,30 @@ def delete_transaction(name, transaction_id):
         writer = csv.DictWriter(file, fieldnames = ['id', 'date', 'detail', 'category', 'amount', 'dr_cr', 'balance'])
         writer.writeheader()
         writer.writerows(db)
+    if not gui:
+        print('Transaction deleted successfully.')
     os.chdir(os.pardir)
     return True
 
-def delete_entry(name, date):
+def delete_entry(name, date, gui = False):
+    if not date in get_info(name, 'date'):
+        print('Entry not found')
+        return
+    
     os.chdir(name)
     db = list(csv.DictReader(open('diary.csv', 'r')))
-    index = None
+    
     for i in range(len(db)):
         if db[i]['date'] == date:
-            index = i
             db.remove(db[i])
             break
-    if not(index):
-        os.chdir(os.pardir)
-        print('\nDiary entry not found.')
-        return
     
     with open('diary.csv', 'w') as diary:
         writer = csv.DictWriter(diary, fieldnames=['date', 'category', 'entry'])
         writer.writeheader()
         writer.writerows(db)
+    if not gui:
+        print('Entry deleted successfully.')
     os.chdir(os.pardir)
     return True
 
@@ -354,15 +367,15 @@ def stats(name, gui = False):
             return
 
     items = set([row['detail'] for row in reader if row['detail'] != 'Initial Balance'])
-    #Amount spent in a month is working 
-    amount_month_cr = sum([int(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year)])
+    #Amount spent in a month
+    amount_month_cr = sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year)])
 
-    #Amount recieved in a month is working
-    amount_month_dr = sum([int(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['category'] != 'Loan')  and (row['dr_cr'] == 'debit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year)])
+    #Amount recieved in a month
+    amount_month_dr = sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['category'] != 'Loan')  and (row['dr_cr'] == 'debit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year)])
 
     items_amount = []
     for item in items:
-        items_amount.append((item, sum([int(row['amount']) for row in reader if (row['detail'] == item) and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year)] )))
+        items_amount.append((item, sum([float(row['amount']) for row in reader if (row['detail'] == item) and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year)] )))
 
     items_amount = [row['detail'] for row in reader if (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year)]
 
@@ -376,7 +389,7 @@ def stats(name, gui = False):
     categories = list(categories)
     amount_categories = {}
     for category in categories:
-        amount = sum([int(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year) and (row['category'] == category)])
+        amount = sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year) and (row['category'] == category)])
         amount_categories[amount] = category
 
     most_spent_category = (max(amount_categories.keys()), amount_categories[max(amount_categories.keys())] )
@@ -384,7 +397,7 @@ def stats(name, gui = False):
 
     amount_items = {}
     for item in items:
-        amount = sum([int(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year) and (row['category'] == category)])
+        amount = sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year) and (row['category'] == category)])
         amount_items[amount] = category
 
     items_Spent = [(row['detail'], row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year) ]
@@ -392,26 +405,26 @@ def stats(name, gui = False):
     transactions = len(reader)
     expensive_item = ('', 0)
     for i in items_Spent:
-        if int(i[1]) > int(expensive_item[1]):
+        if float(i[1]) > float(expensive_item[1]):
             expensive_item = (i[0], i[1])
     balance = [row['balance'] for row in reader][-1]
     if not gui:
-        print(*items)
+        print("Current Balance : ", balance)
         print('Amount spent in this month :', amount_month_cr)
         print('Amount recieved in this month :', amount_month_dr)
         print('Most amount spent on an item in this month :', expensive_item[0], 'for', expensive_item[1])
         print("Most frequently bought items in this month :", *most_frequent_item)
         print("Category with highest spendings :", most_spent_category)
+        print("Total number of transactions :", transactions)
         os.chdir(os.pardir)
         return
     else:
         os.chdir(os.pardir)
         return {'Items': items, "Money spent": amount_month_cr, "Money recieved": amount_month_dr, "Most expensive item": expensive_item, "Most frequently bought item": most_frequent_item, "Category with highest spending" : most_spent_category, "Categories and amount spent": amount_categories, "Number of transactions" : transactions, "Balance" : balance}
 
-def search_cli(name, domain,data = None, gui = False):
+def get_query_results(name, domain,data = None, gui = False):
     os.chdir(name)
     
-
     if domain == 'diary':
         df = pd.read_csv('diary.csv')
 
@@ -687,7 +700,7 @@ def GUI():
         def search():
             date = search_date.get()
             category = search_category.get()
-            results = search_cli(name, 'diary', data = {'date' : date, 'category' : category}, gui = True)
+            results = get_query_results(name, 'diary', data = {'date' : date, 'category' : category}, gui = True)
             for widget in frame.winfo_children():
                 widget.destroy()
             CTkLabel(frame, text = 'Date   ', font = ('georgia', 17)).grid(row = 1, column = 1, padx = 5)
@@ -738,7 +751,7 @@ def GUI():
                 CTkLabel(frame, text = row['date'], font = ('roboto', 15)).grid(row = i, column = 1, padx = 5)
                 CTkLabel(frame, text = row['category'], font = ('roboto', 15)).grid(row = i, column = 2, padx = 60)
                 CTkButton(frame, text = 'Read', width = 100, height = 15, font = ('roboto', 15), command = functools.partial(gui_read, row)).grid(row = i, column = 3)
-                CTkButton(frame, text = 'Delete', width = 2, fg_color = 'red', hover_color = "#800000", height = 15, font = ('roboto', 15), command = functools.partial(delete_entry, name, row['date'])).grid(row = i, column = 4, padx = 10)
+                CTkButton(frame, text = 'Delete', width = 2, fg_color = 'red', hover_color = "#800000", height = 15, font = ('roboto', 15), command = functools.partial(delete_entry, name, row['date'], True)).grid(row = i, column = 4, padx = 10)
         os.chdir(os.pardir)
 
     def add_transaction():
@@ -819,7 +832,7 @@ def GUI():
                 'balance': ''
             }
 
-            results = search_cli(name, domain='finance', data = data, gui = True)
+            results = get_query_results(name, domain='finance', data = data, gui = True)
             
             for widget in frame.winfo_children():
                 widget.destroy()
@@ -840,7 +853,7 @@ def GUI():
                 CTkLabel(frame, text = results.iloc[row,4], font = ('roboto', 15), wraplength = maxlen).grid(row = i, column = 4, padx = 5)
                 CTkLabel(frame, text = results.iloc[row,5], font = ('roboto', 15), wraplength = maxlen).grid(row = i, column = 5, padx = 5)
                 if str(results.iloc[row,0]) != '0':
-                    CTkButton(frame, text = 'Delete', font = ('roboto', 15), width = 2, fg_color ='red', bg_color = 'grey', hover_color='#800000', command = functools.partial(delete_transaction, name, results.iloc[row,0])).grid(row = i, column = 6, sticky = 'w', pady = 2)
+                    CTkButton(frame, text = 'Delete', font = ('roboto', 15), width = 2, fg_color ='red', bg_color = 'grey', hover_color='#800000', command = functools.partial(delete_transaction, name, results.iloc[row,0], True)).grid(row = i, column = 6, sticky = 'w', pady = 2)
             CTkButton(frame, text = '+', font = ('roboto', 15), width = 28,  fg_color = '#1E5994', bg_color = 'grey', command = add_transaction).place(x=760, y=2)
 
         CTkLabel(frame, text = '').grid(row = 1, column = 1)
@@ -879,7 +892,7 @@ def GUI():
                 CTkLabel(frame, text = row['amount'], font = ('roboto', 15), wraplength = maxlen).grid(row = i, column = 4, padx = 5)
                 CTkLabel(frame, text = row['dr_cr'], font = ('roboto', 15), wraplength = maxlen).grid(row = i, column = 5, padx = 5)
                 if str(row['id']) != '0':
-                    CTkButton(frame, text = 'Delete', font = ('roboto', 15), width = 2, fg_color = 'red', bg_color = 'grey', hover_color='#800000', command = functools.partial(delete_transaction, name, row['id'])).grid(row = i, column = 6, sticky = 'w', pady =2)
+                    CTkButton(frame, text = 'Delete', font = ('roboto', 15), width = 2, fg_color = 'red', bg_color = 'grey', hover_color='#800000', command = functools.partial(delete_transaction, name, row['id'], True)).grid(row = i, column = 6, sticky = 'w', pady =2)
         os.chdir(os.pardir)
 
     def gui_del_acc(name):
