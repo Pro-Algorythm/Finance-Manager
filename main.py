@@ -1148,20 +1148,20 @@ def GUI():
             plt.tight_layout()
 
             CTkLabel(frame, text = "Month", font = ("Roboto", 20)).grid(row = 1, column = 1, sticky = W)
-            CTkLabel(frame, text = datetime.now().strftime("%B"), font = ("Roboto", 20)).grid(row = 1, column = 2, padx = 10)
+            CTkLabel(frame, text = datetime.now().strftime("%B"), font = ("Roboto", 20)).grid(row = 1, column = 2, sticky=W)
             CTkLabel(frame, text = "Money spent", font = ("Roboto", 20)).grid(row = 2, column = 1, sticky = W)
-            CTkLabel(frame, text = data['Money spent'], font = ("Roboto", 20)).grid(row = 2, column = 2)
+            CTkLabel(frame, text = data['Money spent'], font = ("Roboto", 20)).grid(row = 2, column = 2, sticky = W)
             CTkLabel(frame, text = "Money recieved (Loans excluded)", font = ("Roboto", 20)).grid(row = 3, column = 1, sticky = W)
 
-            CTkLabel(frame, text = data['Money recieved'], font = ("Roboto", 20)).grid(row = 3, column = 2)
-            CTkLabel(frame, text = '\n', font = ("Roboto", 20)).grid(row = 4, column = 1)
+            CTkLabel(frame, text = data['Money recieved'], font = ("Roboto", 20)).grid(row = 3, column = 2, sticky = W)
+            CTkLabel(frame, text = '\n', font = ("Roboto", 20)).grid(row = 4, column = 1, sticky = W)
 
             #Adjust all rows/columns
             CTkLabel(frame, text = "Weekly Stats", font = ("Roboto", 20)).grid(row = 5, column = 1, sticky = W)
             CTkLabel(frame, text = "  Week with highest spendage", font = ("Roboto", 20)).grid(row = 6, column = 1, sticky = W)
-            CTkLabel(frame, text = str(data['weekly analysis']['Week with most spendage'][1]) + ' in ' + data['weekly analysis']['Week with most spendage'][0], font = ("Roboto", 20)).grid(row = 6, column = 2, sticky = W)
-            CTkLabel(frame, text = "  Week with least spendage\n including only non-zero weeks\n", font = ("Roboto", 20)).grid(row = 7, column = 1, sticky = W)
-            CTkLabel(frame, text = str(data['weekly analysis']['Week with least spendage'][1]) + ' in ' + data['weekly analysis']['Week with least spendage'][0], font = ("Roboto", 20)).grid(row = 7, column = 2, sticky = W)
+            CTkLabel(frame, text = str(data['weekly analysis']['Week with most spendage'][1]) + ' in ' + data['weekly analysis']['Week with most spendage'][0], font = ("Roboto", 20)).grid(row = 6, column = 2, sticky = W, padx = 5)
+            CTkLabel(frame, text = "  Week with least spendage including\nonly non-zero and full weeks\n", font = ("Roboto", 20)).grid(row = 7, column = 1, sticky = W)
+            CTkLabel(frame, text = str(data['weekly analysis']['Week with least spendage'][1]) + ' in ' + data['weekly analysis']['Week with least spendage'][0], font = ("Roboto", 20)).grid(row = 7, column = 2, sticky = W, padx = 5)
             CTkLabel(frame, text = '  Average weekly spendage', font = ("Roboto", 20)).grid(row = 8, column = 1, sticky = W)
             CTkLabel(frame, text = data['weekly analysis']['average'], font = ("Roboto", 20)).grid(row = 8, column = 2, sticky = W)
 
@@ -1169,9 +1169,9 @@ def GUI():
             CTkLabel(frame, text = "", font = ("Roboto", 20)).grid(row = 9, column = 1, sticky = W)
             CTkLabel(frame, text = "\nCategory with most spending", font = ("Roboto", 20)).grid(row = 10, column = 1, sticky = W)
             CTkLabel(frame, text = "  Category", font = ("Roboto", 20)).grid(row = 11, column = 1, sticky = W)
-            CTkLabel(frame, text = data["Category with highest spending"][1], font = ("Roboto", 20)).grid(row = 11, column = 2)
+            CTkLabel(frame, text = data["Category with highest spending"][1], font = ("Roboto", 20)).grid(row = 11, column = 2, sticky = W)
             CTkLabel(frame, text = "  Amount", font = ("Roboto", 20)).grid(row = 12, column = 1, sticky = W)
-            CTkLabel(frame, text = data["Category with highest spending"][0], font = ("Roboto", 20)).grid(row = 12, column = 2)
+            CTkLabel(frame, text = data["Category with highest spending"][0], font = ("Roboto", 20)).grid(row = 12, column = 2, sticky = W)
             
             CTkLabel(frame, text = '').grid(row = 12,column = 1)
 
@@ -1193,7 +1193,7 @@ def GUI():
             CTkLabel(frame, text = 'Financial report', font = ("Roboto", 20)).grid(row = 17,column = 1, sticky = W)
             
             CTkLabel(frame, text = report, font = ('Roboto', 20)).place(x=0, y=610)
-            CTkLabel(frame, text = '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n').grid(row = 18,column = 1)
+            CTkLabel(frame, text = '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n').grid(row = 18,column = 1)
 
     CTkLabel(menu, text = 'Menu', font = ('Georgia', 35)).pack(anchor = CENTER, pady = 10)
 

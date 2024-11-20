@@ -1,23 +1,31 @@
 id,date,detail,category,amount,dr_cr,balance
-0,17-11-2024,Initial Balance,--,1000.0,debit,1000.0
-1,17-11-2024,Milk,Groceries,22,credit,978.0
-2,18-11-2024,Chenai Darbar,Dining out,45,credit,933.0
-3,19-11-2024,Electricity Bill,Utilities,50,credit,883.0
-4,20-11-2024,Bus Ticket,Transportation,10,credit,873.0
-5,21-11-2024,Netflix Subscription,Entertainment,15,credit,858.0
-6,23-11-2024,Grocery Shopping,Groceries,30,credit,828.0
-7,24-11-2024,Lunch at Cafe,Dining out,20,credit,808.0
-8,25-11-2024,Borrowed Money,Loan,100,debit,908.0
-9,26-11-2024,Paycheck,Salary,200,debit,1108.0
-10,27-11-2024,Gas Bill,Utilities,40,credit,1068.0
-11,28-11-2024,Movie Tickets,Entertainment,20,credit,1048.0
-12,29-11-2024,Taxi Fare,Transportation,15,credit,1033.0
-13,30-11-2024,Gift for Friend,Miscellaneous,30,credit,1003.0
-14,01-12-2024,Water Bill,Utilities,25,credit,978.0
-15,02-12-2024,Gym Membership,Miscellaneous,40,credit,938.0
-16,03-12-2024,Books,Entertainment,20,credit,918.0
-17,04-12-2024,Groceries,Groceries,35,credit,883.0
-18,05-12-2024,Car Maintenance,Transportation,50,credit,833.0
-19,06-12-2024,Dinner at Restaurant,Dining out,60,credit,773.0
-20,20-11-2024,Milk,Groceries,44,credit,729.0
-21,20-11-2024,Bread,Groceries,4,credit,725.0
+0,01-11-2024,Initial Balance,--,1000.0,debit,1000.0
+1,01-11-2024,Milk,Groceries,22.0,credit,978.0
+2,02-11-2024,Bread,Groceries,15.0,credit,963.0
+3,03-11-2024,Bus Fare,Transportation,10.0,credit,953.0
+4,04-11-2024,Utility Bill,Utilities,120.0,credit,833.0
+5,05-11-2024,Coffee,Entertainment,5.0,credit,828.0
+6,06-11-2024,Lunch,Miscellaneous,30.0,credit,798.0
+7,07-11-2024,Book,Education,20.0,credit,778.0
+8,08-11-2024,Gym Membership,Miscellaneous,50.0,credit,728.0
+9,09-11-2024,Gift,Clothing,35.0,credit,693.0
+10,10-11-2024,Taxi,Transportation,25.0,credit,668.0
+11,11-11-2024,Movie,Entertainment,15.0,credit,653.0
+12,12-11-2024,Groceries,Groceries,40.0,credit,613.0
+13,14-11-2024,Medicine,Miscellaneous,30.0,credit,583.0
+14,15-11-2024,Donation,Miscellaneous,25.0,credit,558.0
+15,16-11-2024,Dinner,Miscellaneous,45.0,credit,513.0
+16,17-11-2024,Train Ticket,Transportation,15.0,credit,498.0
+17,18-11-2024,Concert,Entertainment,50.0,credit,448.0
+18,19-11-2024,Shampoo,Miscellaneous,15.0,credit,433.0
+19,20-11-2024,Parking Fee,Transportation,10.0,credit,423.0
+20,21-11-2024,Coffee,Groceries,5.0,credit,418.0
+21,22-11-2024,Snacks,Groceries,10.0,credit,408.0
+22,23-11-2024,Gym Equipment,Miscellaneous,75.0,credit,333.0
+23,24-11-2024,Stationery,Education,10.0,credit,323.0
+24,25-11-2024,Restaurant,Groceries,50.0,credit,273.0
+25,26-11-2024,Bus Fare,Transportation,10.0,credit,263.0
+26,27-11-2024,Magazine,Entertainment,10.0,credit,253.0
+27,28-11-2024,Electricity Bill,Utilities,100.0,credit,153.0
+28,29-11-2024,Donation,Miscellaneous,15.0,credit,138.0
+29,30-11-2024,Dinner,Groceries,20.0,credit,118.0
