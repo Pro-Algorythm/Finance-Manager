@@ -347,6 +347,7 @@ def get_budgets(name, print_results=False):
         if print_results:
             print('No data available.')
         else:
+            os.chdir(os.pardir)
             return []
         
     for row in reader:
@@ -399,7 +400,7 @@ def delete_entry(name, date, gui = False):
         return
     
     os.chdir(name)
-    db = list(csv.DictReader(open('diary.csv', 'r')))
+    db = list(csv.DictReader(open('diary.csv', 'r+')))
     
     for i in range(len(db)):
         if db[i]['date'] == date:
@@ -854,8 +855,6 @@ def GUI():
         for widget in main.winfo_children():
             widget.destroy()
 
-        os.chdir(name)
-
         title.configure(text = 'Dashboard')
         CTkButton(main, text = '', width = 750, height = 450, fg_color = '#4d4b48', hover_color='#4d4b48').place(x=75, y=75)
 
@@ -868,6 +867,7 @@ def GUI():
         CTkButton(main, text = '+', font = ('roboto', 20), width = 28,  fg_color = '#1E5994', bg_color = '#1F6AA5', command = gui_write).place(x=690, y=103)
         
         CTkLabel(main, text = 'Balance', font = ('roboto', 30), bg_color = '#1F6AA5').place(x=185, y=115)
+        os.chdir(name)
         with open('finance.csv', 'r') as f:
             reader = csv.DictReader(f)
             bal = [row['balance'] for row in reader][-1]
@@ -880,7 +880,6 @@ def GUI():
         if budgets != []:
             CTkLabel(main, text = 'Spent/Overall budget', font = ('roboto', 20), bg_color = '#1F6AA5').place(x=180,y=200)
             budget_label = CTkLabel(main, text = f"{stats(name, gui = True)['Money spent']}/{budgets[0][2]}", font = ('roboto', 20), bg_color = '#1F6AA5').place(x=190, y=225)
-            
         CTkButton(main, text = 'Add budgets', font = ('roboto', 20), bg_color = '#1F6AA5', width = 70, fg_color='#005f5f', command = gui_set_budgets).place(x=185, y=260)
 
     def diary():

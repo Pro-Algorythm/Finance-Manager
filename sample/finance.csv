@@ -1,24 +1,22 @@
 id,date,detail,category,amount,dr_cr,balance
-
 0,17-11-2024,Initial Balance,--,1000.0,debit,1000.0
-
 1,17-11-2024,Milk,Groceries,22,credit,978.0
 2,18-11-2024,Chenai Darbar,Dining out,45,credit,933.0
 3,19-11-2024,Electricity Bill,Utilities,50,credit,883.0
 4,20-11-2024,Bus Ticket,Transportation,10,credit,873.0
 5,21-11-2024,Netflix Subscription,Entertainment,15,credit,858.0
-6,22-11-2024,New Shirt,Clothing,25,credit,833.0
-7,23-11-2024,Grocery Shopping,Groceries,30,credit,803.0
-8,24-11-2024,Lunch at Cafe,Dining out,20,credit,783.0
-9,25-11-2024,Borrowed Money,Loan,100,debit,883.0
-10,26-11-2024,Paycheck,Salary,200,debit,1083.0
-11,27-11-2024,Gas Bill,Utilities,40,credit,1043.0
-12,28-11-2024,Movie Tickets,Entertainment,20,credit,1023.0
-13,29-11-2024,Taxi Fare,Transportation,15,credit,1008.0
-14,30-11-2024,Gift for Friend,Miscellaneous,30,credit,978.0
-15,01-12-2024,Water Bill,Utilities,25,credit,953.0
-16,02-12-2024,Gym Membership,Miscellaneous,40,credit,913.0
-17,03-12-2024,Books,Entertainment,20,credit,893.0
-18,04-12-2024,Groceries,Groceries,35,credit,858.0
-19,05-12-2024,Car Maintenance,Transportation,50,credit,808.0
-20,06-12-2024,Dinner at Restaurant,Dining out,60,credit,748.0
+6,23-11-2024,Grocery Shopping,Groceries,30,credit,828.0
+7,24-11-2024,Lunch at Cafe,Dining out,20,credit,808.0
+8,25-11-2024,Borrowed Money,Loan,100,debit,908.0
+9,26-11-2024,Paycheck,Salary,200,debit,1108.0
+10,27-11-2024,Gas Bill,Utilities,40,credit,1068.0
+11,28-11-2024,Movie Tickets,Entertainment,20,credit,1048.0
+12,29-11-2024,Taxi Fare,Transportation,15,credit,1033.0
+13,30-11-2024,Gift for Friend,Miscellaneous,30,credit,1003.0
+14,01-12-2024,Water Bill,Utilities,25,credit,978.0
+15,02-12-2024,Gym Membership,Miscellaneous,40,credit,938.0
+16,03-12-2024,Books,Entertainment,20,credit,918.0
+17,04-12-2024,Groceries,Groceries,35,credit,883.0
+18,05-12-2024,Car Maintenance,Transportation,50,credit,833.0
+19,06-12-2024,Dinner at Restaurant,Dining out,60,credit,773.0
+20,20-11-2024,Milk,Groceries,44,credit,729.0
