@@ -29,6 +29,7 @@ def main():
     parser.add_argument('-d', '--diary', choices = ['write', 'read', 'del'])
     parser.add_argument('-f', '--finance', choices = ['read', 'append', 'del'])
     parser.add_argument('-b', '--budget', action = 'store_true')
+    parser.add_argument('-o', '--overview', action = 'store_true')
     parser.add_argument('-v', '--view_budgets', action = 'store_true')
     parser.add_argument('-s', '--stats', action = 'store_true')
     parser.add_argument('-q', '--query', choices = ['finance', 'diary'])
@@ -53,6 +54,8 @@ def main():
         set_budget(authenticate(input('Name : '),input('Password : ')))
     elif args.view_budgets:
         get_budgets(authenticate(input('Name : '),input('Password : ')), print_results = True)
+    elif args.overview:
+        overview(authenticate(input('Name : '),input('Password : ')))
     elif args.terminate:
         del_acc(authenticate(input('Name : '),input('Password : ')), gui = False)
     elif args.stats:
@@ -130,6 +133,11 @@ def input_entry():
         else:
             break
     return entry
+
+def overview(name):
+    os.chdir(name)
+    print(f'\nDiary entries : {len(list(csv.DictReader(open('diary.csv', 'r'))))}\nBalance : {list(csv.DictReader(open('finance.csv', 'r')))[-1]['balance']}')
+    os.chdir(os.pardir)
 
 def authenticate(name, password, gui = False):
     access = False
@@ -352,7 +360,7 @@ def get_budgets(name, print_results=False):
         
     for row in reader:
         if print_results:
-            print(f'{row["type"]}: {row["category"]} - {row["amount"]}')
+            print(f'{row["type"].title()}: {row["category"]} - {row["amount"]}')
         else:
             budgets.append((row['type'], row['category'], row['amount']))
     os.chdir(os.pardir)
@@ -488,8 +496,8 @@ def stats(name, gui = False):
     if cal.monthrange(datetime.now().date().year, datetime.now().date().month)[1] == 30:
         week5 = float(sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year) and (convert_Date(row['date']).day in range(29,31))])) * 3.5
     else:
-        week5 = float(sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year) and (convert_Date(row['date']).day in range(29,32))])) * (7/3)
-    weekly_spendage = (amount_month_cr / cal.monthrange(datetime.now().date().year, datetime.now().date().month)[1]) *7
+        week5 = float(sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year) and (convert_Date(row['date']).day in range(29,32))]) * (7/3), 2)
+    weekly_spendage = round((amount_month_cr / cal.monthrange(datetime.now().date().year, datetime.now().date().month)[1]) *7)
     weekly_analysis = {
         'Week 1' : week1,
         'Week 2' : week2,
@@ -514,7 +522,7 @@ def stats(name, gui = False):
         print('Most amount spent on an item in this month :', expensive_item[0], 'for', expensive_item[1])
         print("Most frequently bought items in this month :", *most_frequent_item)
         print("Category with highest spendings :", most_spent_category)
-        print("Average weekly spendage : ", weekly_spendage, (week1+week2+week3+week4+week5) / 5)
+        print("Average weekly spendage : ", weekly_spendage)
         print("Total number of transactions :", transactions)
         os.chdir(os.pardir)
         return
@@ -588,7 +596,7 @@ def get_query_results(name, domain,data = None, gui = False):
             return results
 
         print(f'{len(results)} Results\n----------------------------------')
-        print(tab.tabulate(results, tablefmt='grid', headers=["ID", "Date", "Detail","Category" ,"Amount", "Dr/Cr", "Balance"]))
+        print(tab.tabulate(results, tablefmt='grid', headers=["Sr. no.", "ID", "Date", "Detail","Category" ,"Amount", "Dr/Cr", "Balance"]))
 
         os.chdir(os.pardir)
         return
