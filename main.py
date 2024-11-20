@@ -918,7 +918,9 @@ def GUI():
                 CTkLabel(frame, text = results.iloc[row,0], font = ('roboto', 15)).grid(row = i, column = 1, padx = 5)
                 CTkLabel(frame, text = results.iloc[row,1], font = ('roboto', 15)).grid(row = i, column = 2, padx = 60)
                 CTkButton(frame, text = 'Read', width = 100, height = 15, font = ('roboto', 15), command = functools.partial(gui_read, {'date' : results.iloc[row,0], 'category' : results.iloc[row, 1],  'entry' : results.iloc[row,2]})).grid(row = i, column = 3)
-        
+                CTkButton(frame, text = 'Delete', width = 2, fg_color = 'red', hover_color = "#800000", height = 15, font = ('roboto', 15), command = functools.partial(delete_entry, name, results.iloc[row,0], True)).grid(row = i, column = 4, padx = 10)
+
+
         CTkLabel(frame, text = 'Date   ', font = ('georgia', 17)).grid(row = 1, column = 1, padx = 5)
         CTkLabel(frame, text = 'Category', font = ('georgia', 17)).grid(row = 1, column = 2, padx = 60)
         CTkLabel(frame, text = 'Entry', font = ('georgia', 17)).grid(row=1, column = 3)
