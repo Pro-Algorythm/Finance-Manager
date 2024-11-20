@@ -21,8 +21,6 @@ Sample account:
 Username : sample
 Password : 1
 
-Errors:
-1. LOGICAL Gui pie chart overlapping and report not diplaying.
 """
 
 
@@ -30,6 +28,8 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('-d', '--diary', choices = ['write', 'read', 'del'])
     parser.add_argument('-f', '--finance', choices = ['read', 'append', 'del'])
+    parser.add_argument('-b', '--budget', action = 'store_true')
+    parser.add_argument('-v', '--view_budgets', action = 'store_true')
     parser.add_argument('-s', '--stats', action = 'store_true')
     parser.add_argument('-q', '--query', choices = ['finance', 'diary'])
     parser.add_argument('-r', '--report', action = 'store_true')
@@ -49,6 +49,10 @@ def main():
         finance(authenticate(input('Name : '),input('Password : ')), args.finance)
     elif args.finance == 'del':
         delete_transaction(authenticate(input('Name : '),input('Password : ')), input('Transaction ID : '))
+    elif args.budget:
+        set_budget(authenticate(input('Name : '),input('Password : ')))
+    elif args.view_budgets:
+        get_budgets(authenticate(input('Name : '),input('Password : ')), print_results = True)
     elif args.terminate:
         del_acc(authenticate(input('Name : '),input('Password : ')), gui = False)
     elif args.stats:
@@ -90,6 +94,9 @@ def create_acc(name, password, bal, gui = False):
             fin_writer = csv.DictWriter(fin, fieldnames = ['id', 'date', 'detail', 'category', 'amount', 'dr_cr',  'balance'])
             fin_writer.writeheader()
             fin_writer.writerow({'id':0,'date': datetime.now().today().strftime('%d-%m-%Y'), 'detail': 'Initial Balance', 'category' : '--', 'amount': bal, 'dr_cr': 'debit', 'balance': bal})
+        with open('budgets.csv', 'a') as budgets:
+            b_writer = csv.DictWriter(budgets, ['type', 'category', 'amount'])
+            b_writer.writeheader()
         os.chdir(os.pardir)
         return True
 
@@ -286,6 +293,69 @@ def finance(name, action = 'append', date = None, detail = None, category = None
         else:
             os.chdir(os.pardir)
             print('\nTransaction recorded.')
+
+def set_budget(name, type = None, budgets = None, gui = False):
+    os.chdir(name)
+
+    categories = ['Education', 'Groceries', 'Utilities','Entertainment', 'Clothing', 'Transportation', 'Dining out', 'Miscellaneous']
+    
+    if not gui:
+        overall = input('Overall budget : ')
+        if not overall.isdigit():
+            print('Invalid budget.')
+            return
+        overall = float(overall)
+        budgets = []
+        budgets.append(('overall', overall))
+        for category in categories:
+            budget = input(f'Budget for {category} (Enter without any value to skip the category): ')
+            
+            if budget.isdigit():
+                try:
+                    float(budget)
+
+                except:
+                    print('Invalid budget.')
+                    return
+                
+                budgets.append((category, float(budget)))
+                if sum([float(budget[1]) for budget in budgets if budget[0] != 'overall']) > overall:
+                    print('Total budget exceeds overall budget.')
+                    return
+
+    with open('budgets.csv', 'w') as budget_file:
+        writer = csv.DictWriter(budget_file, ['type', 'category', 'amount'])
+
+        writer.writeheader()
+        
+        for category, amount in budgets:
+            if category == 'overall':
+                writer.writerow({'type': 'overall', 'category': '--', 'amount' : amount})
+            else:
+                writer.writerow({'type': 'categorical', 'category': category, 'amount' : amount})
+    if not gui:
+        print('Budgets set successfully.')
+        return
+    os.chdir(os.pardir)
+    return True
+
+def get_budgets(name, print_results=False):
+    os.chdir(name)
+    reader = list(csv.DictReader(open('budgets.csv', 'r')))
+    budgets = []
+    if len(reader) == 0:
+        if print_results:
+            print('No data available.')
+        else:
+            return []
+        
+    for row in reader:
+        if print_results:
+            print(f'{row["type"]}: {row["category"]} - {row["amount"]}')
+        else:
+            budgets.append((row['type'], row['category'], row['amount']))
+    os.chdir(os.pardir)
+    return budgets
 
 def delete_transaction(name, transaction_id, gui=False):
     os.chdir(name)
@@ -524,6 +594,9 @@ def get_query_results(name, domain,data = None, gui = False):
         
 def get_report(name, gui = False):
     items, spent, recieved, most_expensive, most_frequent, expensive_category, categories_amount, transactions, balance, weekly_analysis = stats(name, gui = True).values()
+    categories_amount = {value: key for key, value in categories_amount.items()}
+    budgets = get_budgets(name)
+    
     report = f"In this month, {spent} has been spent and {recieved} has been recieved. "
     categories = ['Loan', 'Salary', 'Groceries', 'Utilities','Entertainment', 'Clothing', 'Transportation', 'Dining out', 'Miscellaneous']
     if expensive_category[1] in ['Entertainment', 'Dining out']:
@@ -534,6 +607,25 @@ def get_report(name, gui = False):
         report += f"Groceries are being spent on a high percentage of the total spending. This should be reduced as much as possible. "
     else:
         report += f"{expensive_category[1]} with a total of {expensive_category[0]} is the category with most money spent. Its suggested to reduce the spendage in this category. "
+    
+    if budgets != []:
+        for budget in budgets:
+            if budget[0] == 'overall' and spent > float(budget[2]):
+                report += f"Your monthly budget was {budget[2]}. You have exceeded your budget by {spent - float(budget[2])}. Consider adjusting ypur spending habits. "
+                continue
+            elif budget[0] == 'overall' and spent <= float(budget[2]):
+                report += f"Your monthly budget was {budget[2]}. You are within your budget. "
+                continue
+            try:
+                category_spent = categories_amount[budget[1].title()]
+            except KeyError:
+                category_spent = 0
+            if category_spent > float(budget[2]):
+                report += f"Your monthly budget for {budget[1].title()} was {budget[2]}. You have exceeded your budget by {categories_amount[budget[1].title()] - float(budget[2])}. Consider adjusting ypur spending habits. "
+            else:
+                report += f"Your monthly budget for {budget[1].title()} was {budget[2]}. You are within your budget. "
+            
+    
     if float(balance) < 200:
         report += f"The balance is {balance}, which is very low. It is essential to maintain a balance above 200. "
     if gui:
@@ -571,9 +663,20 @@ def GUI():
     title.pack(anchor = CENTER, pady = 10)
 
     global name
+    global sign_out_btn
     name = None
+    sign_out_btn = None
+
+    def sign_out():
+        global name
+        name = None
+        for widget in app.winfo_children():
+            if widget._name == '!ctkbutton':
+                widget.destroy()
+        login()
 
     def login():
+        global sign_out_btn
         global name
         for widget in main.winfo_children():
             if widget._name != '!ctklabel':
@@ -591,10 +694,12 @@ def GUI():
         pwd.place(x=200, y=150)
 
         def done():
+            global sign_out_btn
             global name
             res = authenticate(usr.get(), pwd.get(), gui = True)
             if res == True:
                 name = usr.get()
+                sign_out_btn = CTkButton(app, text = 'Sign out', fg_color = 'red', width = 50, hover_color = '#800000', command = sign_out).place(x=1035, y=5)
                 dashboard()
             else:
                 error.configure(text = res)
@@ -680,6 +785,66 @@ def GUI():
         error = CTkLabel(frame, text = '', font = ('georgia', 20))
         error.place(x=100,y=480)
         
+    def gui_set_budgets():
+        for widget in main.winfo_children():
+            widget.destroy()
+
+        def add():
+            if overall.get() == '' or not overall.get().isdigit():
+                label.configure(text = 'Invalid overall budget.')
+
+            budgets = [(category[0], float(category[1])) for category in [('groceries', groceries.get()), ('clothing', clothing.get()), ('dining out', dining.get()), ('education', education.get()), ('utilities', utilities.get()), ('transportatoin', transportation.get()), ('miscellaneous', misc.get())] if category[1].isdigit()]
+            
+            budgets.insert(0, ('overall', float(overall.get())))
+
+            if sum([float(budget[1]) for budget in budgets if budget[0] != 'overall']) > float(overall.get()):
+                label.configure(text = 'Total budget exceeds overall budget.', text_color = 'red')
+                return
+            set_budget(name,budgets = budgets, gui = True)
+            label.configure(text = 'Budgets set successfully.')
+        
+        frame = CTkScrollableFrame(main, width = 896, height = 520, border_width=1 , fg_color='#4D4B48', corner_radius = 0)
+        frame.pack_propagate(False)
+        frame.place(x=2, y=80)
+
+        CTkLabel(frame, text = 'Overall budget', font = ('georgia', 20)).grid(row = 1, column =1, sticky = W, padx = 5, pady = 5)
+        overall = CTkEntry(frame,width = 200, font = ('georgia', 20))
+        overall.grid(row = 1, column = 2, sticky = W, padx = 10)
+        CTkLabel(frame, text = 'Categorical budgets', font = ('georgia', 20)).grid(row = 2, column =1, sticky = W)
+
+        CTkLabel(frame, text = '   Groceries', font = ('georgia', 20)).grid(row = 3, column =1, sticky = W)
+        groceries = CTkEntry(frame, font  = ('georgia', 20))
+        groceries.grid(row = 3, column = 2)
+        
+        CTkLabel(frame, text = '   Clothing', font = ('georgia', 20)).grid(row = 4, column =1, sticky = W)
+        clothing = CTkEntry(frame, font  = ('georgia', 20))
+        clothing.grid(row = 4, column = 2)
+
+        CTkLabel(frame, text = '   Dining out', font = ('georgia', 20)).grid(row = 5, column =1, sticky = W)
+        dining = CTkEntry(frame, font  = ('georgia', 20))
+        dining.grid(row = 5, column = 2)
+
+        CTkLabel(frame, text = '   Utilities', font = ('georgia', 20)).grid(row = 6, column =1, sticky = W)
+        utilities = CTkEntry(frame, font  = ('georgia', 20))
+        utilities.grid(row = 6, column = 2)
+
+        CTkLabel(frame, text = '   Education', font = ('georgia', 20)).grid(row = 7, column =1, sticky = W)
+        education = CTkEntry(frame, font  = ('georgia', 20))
+        education.grid(row = 7, column = 2)
+
+        CTkLabel(frame, text = '   Transportation', font = ('georgia', 20)).grid(row = 8, column =1, sticky = W)
+        transportation = CTkEntry(frame, font  = ('georgia', 20))
+        transportation.grid(row = 8, column = 2)
+
+        CTkLabel(frame, text = '   Miscellaneous', font = ('georgia', 20)).grid(row = 9, column =1, sticky = W)
+        misc = CTkEntry(frame, font  = ('georgia', 20))
+        misc.grid(row = 9, column = 2)
+
+        label = CTkLabel(frame, text = 'Leave empty to skip a category', font = ('georgia', 20), text_color = '#1F6AA5')
+        label.grid(row =10, column = 1, pady = 10)
+
+        CTkButton(frame, text = 'Add', font = ('georgia',20), command = add).grid(row = 10, column = 2)
+
     def dashboard():
         global name
         global title
@@ -694,24 +859,29 @@ def GUI():
         title.configure(text = 'Dashboard')
         CTkButton(main, text = '', width = 750, height = 450, fg_color = '#4d4b48', hover_color='#4d4b48').place(x=75, y=75)
 
-
-        CTkButton(main, text = '', height = 100, width = 230, hover_color='#1F6AA5', fg_color = '#1F6AA5', bg_color="#4d4b48").place(x = 175, y = 100)
-        CTkButton(main, text = '', height = 100, width = 230, hover_color='#1F6AA5', fg_color = '#1F6AA5', bg_color="#4d4b48").place(x = 495, y = 100)
+        CTkButton(main, text = '', height = 220, width = 230, hover_color='#1F6AA5', fg_color = '#1F6AA5', bg_color="#4d4b48").place(x = 175, y = 100)
+        CTkButton(main, text = '', height = 220, width = 230, hover_color='#1F6AA5', fg_color = '#1F6AA5', bg_color="#4d4b48").place(x = 495, y = 100)
 
         CTkLabel(main, text = 'Entries', font = ('roboto', 30), bg_color = '#1F6AA5').place(x=505, y=115)
         entries = CTkLabel(main, text = len(get_info(name, 'date')), font = ('roboto', 30), bg_color = '#1F6AA5')
         entries.place(x=505, y=150)
-
         CTkButton(main, text = '+', font = ('roboto', 20), width = 28,  fg_color = '#1E5994', bg_color = '#1F6AA5', command = gui_write).place(x=690, y=103)
-        CTkButton(main, text = '+', font = ('roboto', 20), width = 28,  fg_color = '#1E5994', bg_color = '#1F6AA5', command = add_transaction).place(x=366, y=103)
-        CTkLabel(main, text = 'Balance', font = ('roboto', 30), bg_color = '#1F6AA5').place(x=180, y=115)
-
         
+        CTkLabel(main, text = 'Balance', font = ('roboto', 30), bg_color = '#1F6AA5').place(x=185, y=115)
         with open('finance.csv', 'r') as f:
             reader = csv.DictReader(f)
             bal = [row['balance'] for row in reader][-1]
         os.chdir(os.pardir)
-        CTkLabel(main, text = bal, font = ('roboto', 30), bg_color = '#1F6AA5').place(x=180, y=155)
+        CTkLabel(main, text = bal, font = ('roboto', 30), bg_color = '#1F6AA5').place(x=185, y=155)
+        CTkButton(main, text = '+', font = ('roboto', 20), width = 28,  fg_color = '#1E5994', bg_color = '#1F6AA5', command = add_transaction).place(x=366, y=103)
+
+        #Set budget
+        budgets = get_budgets(name)
+        if budgets != []:
+            CTkLabel(main, text = 'Spent/Overall budget', font = ('roboto', 20), bg_color = '#1F6AA5').place(x=180,y=200)
+            budget_label = CTkLabel(main, text = f"{stats(name, gui = True)['Money spent']}/{budgets[0][2]}", font = ('roboto', 20), bg_color = '#1F6AA5').place(x=190, y=225)
+            
+        CTkButton(main, text = 'Add budgets', font = ('roboto', 20), bg_color = '#1F6AA5', width = 70, fg_color='#005f5f', command = gui_set_budgets).place(x=185, y=260)
 
     def diary():
         if name == None:
@@ -941,7 +1111,7 @@ def GUI():
         data = stats(name, gui = True)
 
         
-        frame = CTkScrollableFrame(main, width = 896, height =515 ,fg_color='grey')
+        frame = CTkScrollableFrame(main, width = 876, height =515 ,fg_color='grey')
         frame.pack_propagate(False)
         frame.place(x=2, y=85)
 
@@ -1014,10 +1184,7 @@ def GUI():
             CTkLabel(frame, text = 'Financial report', font = ("Roboto", 20)).grid(row = 17,column = 1, sticky = W)
             
             CTkLabel(frame, text = report, font = ('Roboto', 20)).place(x=0, y=610)
-            CTkLabel(frame, text = '').grid(row = 18,column = 1)
-            CTkLabel(frame, text = '').grid(row = 19,column = 1)
-            CTkLabel(frame, text = '').grid(row = 20,column = 1)
-            CTkLabel(frame, text = '').grid(row = 21,column = 1)
+            CTkLabel(frame, text = '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n').grid(row = 18,column = 1)
 
     CTkLabel(menu, text = 'Menu', font = ('Georgia', 35)).pack(anchor = CENTER, pady = 10)
 
