@@ -302,7 +302,7 @@ def finance(name, action = 'append', date = None, detail = None, category = None
             os.chdir(os.pardir)
             print('\nTransaction recorded.')
 
-def set_budget(name, type = None, budgets = None, gui = False):
+def set_budget(name, budgets = None, gui = False):
     os.chdir(name)
 
     categories = ['Education', 'Groceries', 'Utilities','Entertainment', 'Clothing', 'Transportation', 'Dining out', 'Miscellaneous']
@@ -793,7 +793,27 @@ def GUI():
         CTkButton(frame, text = 'Save', font = ('georgia', 20), command = save).grid(row =5, column =2, sticky = E, padx=15, pady = 5)
         error = CTkLabel(frame, text = '', font = ('georgia', 20))
         error.place(x=100,y=480)
-        
+
+
+    def gui_view_budgets():
+        global title
+        budgets = get_budgets(name)
+        for widget in main.winfo_children():
+            widget.destroy()
+        title.configure(text = 'Budgets')
+        frame = CTkScrollableFrame(main, width = 896, fg_color = 'grey', height = 500)
+        frame.place(x=0,y=85)
+        CTkLabel(frame, text = 'Type', font = ('roboto', 20)).grid(row=1, column = 1, padx = (5,10))
+        CTkLabel(frame, text = 'Category', font = ('roboto', 20)).grid(row=1, column = 2, padx = (5,10))
+        CTkLabel(frame, text = 'Amount', font = ('roboto', 20)).grid(row=1, column = 3)
+
+        i=2
+        for type, category, amount in budgets:
+            CTkLabel(frame, text = type.title(), font = ('roboto', 20)).grid(row=i, column = 1, padx = (5,10))
+            CTkLabel(frame, text = category, font = ('roboto', 20)).grid(row=i, column = 2, padx = (5,10))
+            CTkLabel(frame, text = amount, font = ('roboto', 20)).grid(row=i, column = 3)
+            i+=1
+
     def gui_set_budgets():
         for widget in main.winfo_children():
             widget.destroy()
@@ -888,7 +908,10 @@ def GUI():
         if budgets != []:
             CTkLabel(main, text = 'Spent/Overall budget', font = ('roboto', 20), bg_color = '#1F6AA5').place(x=180,y=200)
             budget_label = CTkLabel(main, text = f"{stats(name, gui = True)['Money spent']}/{budgets[0][2]}", font = ('roboto', 20), bg_color = '#1F6AA5').place(x=190, y=225)
-        CTkButton(main, text = 'Add budgets', font = ('roboto', 20), bg_color = '#1F6AA5', width = 70, fg_color='#005f5f', command = gui_set_budgets).place(x=185, y=260)
+            CTkButton(main, text = 'Add budgets', font = ('roboto', 20), bg_color = '#1F6AA5', width = 70, fg_color='#005f5f', command = gui_set_budgets).place(x=185, y=255)
+            CTkButton(main, text = 'View budgets', font = ('roboto', 20), bg_color = '#1F6AA5', width = 70, fg_color='#005f5f', command = gui_view_budgets).place(x=185, y=285)
+        else:
+            CTkButton(main, text = 'Add budgets', font = ('roboto', 20), bg_color = '#1F6AA5', width = 70, fg_color='#005f5f', command = gui_set_budgets).place(x=185, y=200)
 
     def diary():
         if name == None:
