@@ -26,7 +26,10 @@ This is a python program that has GUI and CLI functionality. Its main function i
     - Total money spent in a month
     - Total money recieved in a month
     - Item on which most money was spent
-    - Most frequently bought item.
+    - Most frequently bought item
+    - Category with highest spending
+    - Average weekly spending
+    - Number of transactoins
 
 - `python main.py <-q/--query> <finance/diary>` 
     - `python main.py <-q/--query> finance` : Takes some filter parameters (Date, Detail, Amount, Dr/Cr) and returns search reults in a table using tabulate.
@@ -39,5 +42,5 @@ This is a python program that has GUI and CLI functionality. Its main function i
 - `python main.py <-t/--terminate>` : Authenticates the user and terminates the account associated.
 
 ## LICENSE
-GPL V3
+GNU GPL V3.
 Refer to the LICENSE file.
