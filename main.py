@@ -1,14 +1,14 @@
-import sys
-from argparse import ArgumentParser
-import csv
-from datetime import datetime, date as datetime_date
-from customtkinter import *
-import os
-import shutil
-import hashlib as hash
-import functools
-import tabulate as tab
-import pandas as pd
+import sys 
+from argparse import ArgumentParser 
+import csv 
+from datetime import datetime, date as datetime_date 
+from customtkinter import * 
+import os 
+import shutil 
+import hashlib as hash 
+import functools 
+import tabulate as tab 
+import pandas as pd 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg as StatCanvas
 import matplotlib.pyplot as plt 
 import calendar as cal
@@ -23,11 +23,10 @@ Password : 1
 
 """
 
-
 def main():
     parser = ArgumentParser()
     parser.add_argument('-d', '--diary', choices = ['write', 'read', 'del'])
-    parser.add_argument('-f', '--finance', choices = ['read', 'append', 'del'])
+    parser.add_argument('-f', '--finance', choices = ['read', 'append', 'edit', 'del'])
     parser.add_argument('-b', '--budget', action = 'store_true')
     parser.add_argument('-o', '--overview', action = 'store_true')
     parser.add_argument('-v', '--view_budgets', action = 'store_true')
@@ -46,7 +45,7 @@ def main():
             read(authenticate(input('Name : '),input('Password : ')), input('Date of diary entry (dd/mm/yyyy):'))
         else:
             delete_entry(authenticate(input('Name : '),input('Password : ')), input('Date of diary entry (dd/mm/yyyy): '))
-    elif args.finance in ['read', 'append']:
+    elif args.finance in ['read', 'append', 'edit']:
         finance(authenticate(input('Name : '),input('Password : ')), args.finance)
     elif args.finance == 'del':
         delete_transaction(authenticate(input('Name : '),input('Password : ')), input('Transaction ID : '))
@@ -79,25 +78,25 @@ def create_acc(name, password, bal, gui = False):
         try:
             with open('passwords.csv', 'r') as pwd:
                 pass
-            with open('passwords.csv', 'a') as pwd:
+            with open('passwords.csv', 'a', newline='') as pwd:
                 writer = csv.DictWriter(pwd, fieldnames = ['username', 'password'])
                 writer.writerow({'username': name, 'password': password})
         except FileNotFoundError:
-            with open('passwords.csv', 'a') as pwd:
+            with open('passwords.csv', 'a', newline='') as pwd:
                 writer = csv.DictWriter(pwd, fieldnames = ['username', 'password'])
                 writer.writeheader()
                 writer.writerow({'username': name, 'password': password})
 
         os.mkdir(f'{name}')
         os.chdir(f'{name}')
-        with open(f'diary.csv', 'a') as db:
+        with open(f'diary.csv', 'a', newline='') as db:
             d_writer = csv.DictWriter(db, fieldnames = ['date', 'category', 'entry'])
             d_writer.writeheader()
-        with open('finance.csv', 'a') as fin:
+        with open('finance.csv', 'a', newline='') as fin:
             fin_writer = csv.DictWriter(fin, fieldnames = ['id', 'date', 'detail', 'category', 'amount', 'dr_cr',  'balance'])
             fin_writer.writeheader()
-            fin_writer.writerow({'id':0,'date': datetime.now().today().strftime('%d-%m-%Y'), 'detail': 'Initial Balance', 'category' : '--', 'amount': bal, 'dr_cr': 'debit', 'balance': bal})
-        with open('budgets.csv', 'a') as budgets:
+            fin_writer.writerow({'id':0,'date': datetime.now().today().strftime('%d-%m-%Y'), 'detail': 'Initial Balance', 'category' : '--', 'amount': float(bal), 'dr_cr': 'debit', 'balance': float(bal)})
+        with open('budgets.csv', 'a', newline='') as budgets:
             b_writer = csv.DictWriter(budgets, ['type', 'category', 'amount'])
             b_writer.writeheader()
         os.chdir(os.pardir)
@@ -184,7 +183,7 @@ def read(name, date):
 
 def write(name, date, category, entry, gui = False):
     os.chdir(name)
-    with open('diary.csv', 'a') as file:
+    with open('diary.csv', 'a', newline='') as file:
         writer = csv.DictWriter(file, fieldnames = ['date', 'category', 'entry'])
         if date:
             validation = convert_Date(date)
@@ -231,7 +230,7 @@ def get_info(name, item):
 
     return items
 
-def finance(name, action = 'append', date = None, detail = None, category = None, amount = None, dr_cr = None, gui = False):
+def finance(name, action = 'append', date = None, detail = None, category = None, amount = None, dr_cr = None, id = None, gui = False):
     os.chdir(name)
     reader = list(csv.DictReader(open('finance.csv', 'r')))
 
@@ -258,7 +257,7 @@ def finance(name, action = 'append', date = None, detail = None, category = None
             categories = ['Loan', 'Education', 'Salary', 'Groceries', 'Utilities','Entertainment', 'Clothing', 'Transportation', 'Dining out', 'Miscellaneous']
             category = input('Category: ')
             while True:
-                if category.title() in categories:
+                if category.capitalize() in categories:
                     break
                 else:
                     category = input('Choose from \n' + '\n'.join(categories)+'\nCategory : ')
@@ -274,7 +273,8 @@ def finance(name, action = 'append', date = None, detail = None, category = None
             if dr_cr == 'credit' and amount > balance:
                 print('\nInsufficient balance.')
                 return
-        date = convert_Date(date, return_type='str')
+            
+        date = convert_Date(date, return_type='string')
         if date == False:
             if gui:
                 os.chdir(os.pardir)
@@ -294,13 +294,68 @@ def finance(name, action = 'append', date = None, detail = None, category = None
         
         with open('finance.csv', 'a', newline='') as file:
             writer = csv.DictWriter(file, fieldnames = ['id', 'date', 'detail', 'category', 'amount', 'dr_cr', 'balance'])
-            writer.writerow({'id' : id,'date': date, 'detail': detail, 'category' : category, 'amount': amount,'dr_cr': dr_cr, 'balance': balance})
+            writer.writerow({'id' : id,'date': date, 'detail': detail, 'category' : category.title(), 'amount': float(amount),'dr_cr': dr_cr, 'balance': balance})
         if gui:
             os.chdir(os.pardir)
             return 'Transaction added.'
         else:
             os.chdir(os.pardir)
             print('\nTransaction recorded.')
+
+    elif action == 'edit':
+        if id == None:
+            id = int(input("Transaction ID : "))
+            try:
+                print("Original entry :\n", tab.tabulate(tabular_data= list(reader[int(id)].items()), tablefmt = 'grid', rowalign='right'))
+            except:
+                raise ValueError(f"Entry at id {id} doesnt exist!")
+            date = input("Date : ")
+            detail = input("Detail : ")
+            category = input("Category : ")
+            amount = input("Amount : ")
+            dr_cr = input("Debit or credit : ")
+
+            try:
+                amount = float(amount)
+            except:
+                raise ValueError("Invalid id or amount!")
+            
+            date = convert_Date(date, return_type='string')
+            if date == False:
+                raise ValueError("Invalid date.")
+            if not category.title() in ['Loan', 'Education', 'Salary', 'Groceries', 'Utilities','Entertainment', 'Clothing', 'Transportation', 'Dining out', 'Miscellaneous']:
+                raise ValueError("Invalid category.")
+            if not dr_cr.lower() in ['debit', 'credit']:
+                raise ValueError("Has to be debit or credit.")
+
+        data = {
+            'id' : id,
+            'date' : date,
+            'detail' : detail,
+            'category' : category,
+            'amount' : amount,
+            'dr_cr' : dr_cr,
+        }
+        try:
+            prev_bal = float(reader[id-1]['balance'])
+        except:
+            prev_bal = 0
+        data['balance'] = prev_bal + data['amount'] if data['dr_cr'] == 'debit' else prev_bal-data['amount']
+        reader[id] = data
+
+        # ADD FUNCTIONALITY FOR CORNER CASE : ID 0 (INIT BAL)
+        for i in range(id+1, len(reader)):
+            prev_bal = float(reader[i-1]['balance'])
+            reader[i]['balance'] = prev_bal + float(reader[i]['amount']) if reader[i]['dr_cr'] == 'debit' else prev_bal-float(reader[i]['amount'])
+
+            
+        with open('finance.csv', 'w', newline='') as f_db:
+            writer = csv.DictWriter(f_db, fieldnames=['id','date','detail','category','amount','dr_cr','balance'])
+            writer.writeheader()
+            writer.writerows(reader)
+
+        print('Editted')
+        return
 
 def set_budget(name, budgets = None, gui = False):
     os.chdir(name)
@@ -331,7 +386,7 @@ def set_budget(name, budgets = None, gui = False):
                     print('Total budget exceeds overall budget.')
                     return
 
-    with open('budgets.csv', 'w') as budget_file:
+    with open('budgets.csv', 'w', newline='') as budget_file:
         writer = csv.DictWriter(budget_file, ['type', 'category', 'amount'])
 
         writer.writeheader()
@@ -429,7 +484,7 @@ def convert_Date(date, return_type = 'datetime'):
         date = datetime_date(int(date.split('-')[2]), int(date.split('-')[1]), int(date.split('-')[0]))
         if return_type == 'datetime':
             return datetime.strptime(date.strftime('%d-%m-%Y'), '%d-%m-%Y')
-        else:
+        elif return_type == 'string':
             return '-'.join([str(date.day).zfill(2), str(date.month).zfill(2), str(date.year).zfill(4)])
     except:
         return False
@@ -448,10 +503,10 @@ def stats(name, gui = False):
 
     items = set([row['detail'] for row in reader if row['detail'] != 'Initial Balance'])
     #Amount spent in a month
-    amount_month_cr = sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year)])
+    amount_month_cr = sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (row['category'] != 'Loan') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year)])
 
     #Amount recieved in a month
-    amount_month_dr = sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['category'] != 'Loan')  and (row['dr_cr'] == 'debit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year)])
+    amount_month_dr = sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['category'] != 'Loan')  and (row['dr_cr'] == 'debit') and (row['category'] != 'Loan') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year)])
 
     items_amount = []
     for item in items:
@@ -496,7 +551,7 @@ def stats(name, gui = False):
     if cal.monthrange(datetime.now().date().year, datetime.now().date().month)[1] == 30:
         week5 = float(sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year) and (convert_Date(row['date']).day in range(29,31))])) * 3.5
     else:
-        week5 = float(sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year) and (convert_Date(row['date']).day in range(29,32))]) * (7/3), 2)
+        week5 = float(sum([float(row['amount']) for row in reader if (row['detail'] != 'Initial Balance') and (row['dr_cr'] == 'credit') and (datetime.now().date().month == convert_Date(row['date']).month) and (datetime.now().date().year == convert_Date(row['date']).year) and (convert_Date(row['date']).day in range(29,32))])) * (7/3)
     weekly_spendage = round((amount_month_cr / cal.monthrange(datetime.now().date().year, datetime.now().date().month)[1]) *7)
     weekly_analysis = {
         'Week 1' : week1,
@@ -562,16 +617,20 @@ def get_query_results(name, domain,data = None, gui = False):
         df = pd.read_csv("finance.csv")
 
         if not(gui):
-            data = {'date' : input('Date (Leave empty for any) : '), 'detail' : input('Detail (Leave empty for any) : '), 'amount' : input('Amount (Leave empty for any) : '), 'dr_cr': input('Debit or Credit (Leave empty for any) : ')}
+            data = {'date' : input('Date (Leave empty for any) : '), 'detail' : input('Detail (Leave empty for any) : '), 'category' : input('Category (Leave empty for any) : '), 'amount' : input('Amount (Leave empty for any) : '), 'dr_cr': input('Debit or Credit (Leave empty for any) : ')}
             if data['amount'] != '':
                 try:
                     data['amount'] = float(data['amount'])
                 except:
                     print("Amount has to be a number.")
                     sys.exit(1)
+            if data['category'].lower() in ['Groceries', 'Utilities', 'Education', 'Transportation', 'Clothing', 'Dining out', 'Miscelleneous'] and data['category'] != '':
+                print('Invalid category')
+                sys.exit(1)
+            data['category'] = data['category'].title()
         
         if data['date'] != '':
-            date = convert_Date(data['date'])
+            date = convert_Date(data['date'], return_type = 'string')
             if date == False:
                 if not gui:
                     print("Invalid date")
@@ -602,6 +661,9 @@ def get_query_results(name, domain,data = None, gui = False):
         return
         
 def get_report(name, gui = False):
+    if type(stats(name, gui = True)) == str:
+        print('No data available.')
+        return
     items, spent, recieved, most_expensive, most_frequent, expensive_category, categories_amount, transactions, balance, weekly_analysis = stats(name, gui = True).values()
     categories_amount = {value: key for key, value in categories_amount.items()}
     budgets = get_budgets(name)
@@ -659,7 +721,7 @@ def GUI():
 
     app = CTk()
     app.geometry('1100x600')
-    app.title('Life-Record')
+    app.title('Finance-Manager')
     app.resizable(False, False)
     app.protocol("WM_DELETE_WINDOW", close)
 
@@ -793,27 +855,7 @@ def GUI():
         CTkButton(frame, text = 'Save', font = ('georgia', 20), command = save).grid(row =5, column =2, sticky = E, padx=15, pady = 5)
         error = CTkLabel(frame, text = '', font = ('georgia', 20))
         error.place(x=100,y=480)
-
-
-    def gui_view_budgets():
-        global title
-        budgets = get_budgets(name)
-        for widget in main.winfo_children():
-            widget.destroy()
-        title.configure(text = 'Budgets')
-        frame = CTkScrollableFrame(main, width = 896, fg_color = 'grey', height = 500)
-        frame.place(x=0,y=85)
-        CTkLabel(frame, text = 'Type', font = ('roboto', 20)).grid(row=1, column = 1, padx = (5,10))
-        CTkLabel(frame, text = 'Category', font = ('roboto', 20)).grid(row=1, column = 2, padx = (5,10))
-        CTkLabel(frame, text = 'Amount', font = ('roboto', 20)).grid(row=1, column = 3)
-
-        i=2
-        for type, category, amount in budgets:
-            CTkLabel(frame, text = type.title(), font = ('roboto', 20)).grid(row=i, column = 1, padx = (5,10))
-            CTkLabel(frame, text = category, font = ('roboto', 20)).grid(row=i, column = 2, padx = (5,10))
-            CTkLabel(frame, text = amount, font = ('roboto', 20)).grid(row=i, column = 3)
-            i+=1
-
+        
     def gui_set_budgets():
         for widget in main.winfo_children():
             widget.destroy()
@@ -873,6 +915,25 @@ def GUI():
         label.grid(row =10, column = 1, pady = 10)
 
         CTkButton(frame, text = 'Add', font = ('georgia',20), command = add).grid(row = 10, column = 2)
+
+    def gui_view_budgets():
+        global title
+        budgets = get_budgets(name)
+        for widget in main.winfo_children():
+            widget.destroy()
+        title.configure(text = 'Budgets')
+        frame = CTkScrollableFrame(main, width = 896, fg_color = 'grey', height = 500)
+        frame.place(x=0,y=85)
+        CTkLabel(frame, text = 'Type', font = ('roboto', 20)).grid(row=1, column = 1, padx = (5,10))
+        CTkLabel(frame, text = 'Category', font = ('roboto', 20)).grid(row=1, column = 2, padx = (5,10))
+        CTkLabel(frame, text = 'Amount', font = ('roboto', 20)).grid(row=1, column = 3)
+
+        i=2
+        for type, category, amount in budgets:
+            CTkLabel(frame, text = type.title(), font = ('roboto', 20)).grid(row=i, column = 1, padx = (5,10))
+            CTkLabel(frame, text = category, font = ('roboto', 20)).grid(row=i, column = 2, padx = (5,10))
+            CTkLabel(frame, text = amount, font = ('roboto', 20)).grid(row=i, column = 3)
+            i+=1
 
     def dashboard():
         global name
@@ -1085,7 +1146,7 @@ def GUI():
                 CTkLabel(frame, text = results.iloc[row,5], font = ('roboto', 15), wraplength = maxlen).grid(row = i, column = 5, padx = 5)
                 if str(results.iloc[row,0]) != '0':
                     CTkButton(frame, text = 'Delete', font = ('roboto', 15), width = 2, fg_color ='red', bg_color = 'grey', hover_color='#800000', command = functools.partial(delete_transaction, name, results.iloc[row,0], True)).grid(row = i, column = 6, sticky = 'w', pady = 2)
-            CTkButton(frame, text = '+', font = ('roboto', 15), width = 28,  fg_color = '#1E5994', bg_color = 'grey', command = add_transaction).place(x=760, y=2)
+            CTkButton(frame, text = '+', font = ('roboto', 15), width = 28,  fg_color = '#1E5994', bg_color = 'grey', command = add_transaction).place(x=860, y=2)
 
         CTkLabel(frame, text = '').grid(row = 1, column = 1)
         search_frame = CTkFrame(main, width = 896, height = 33, fg_color='#63666A',corner_radius=0)
@@ -1206,10 +1267,10 @@ def GUI():
             category_pie_chart.draw()
             category_pie_chart.get_tk_widget().place(x=740,y=490)
 
-            CTkLabel(frame, text = "Most expensive item", font = ("Roboto", 20)).grid(row = 14, column = 1, sticky = W)
+            CTkLabel(frame, text = "\nMost expensive item", font = ("Roboto", 20)).grid(row = 14, column = 1, sticky = W)
             CTkLabel(frame, text = f"{data["Most expensive item"][1]} for {data["Most expensive item"][0]}", font = ("Roboto", 20)).grid(row = 14, column = 2)
             CTkLabel(frame, text = "\nNumber of transactions", font = ("Roboto", 20)).grid(row = 15, column = 1, sticky = W)
-            CTkLabel(frame, text = '\n'+str(data['Number of transactions']), font = ("Roboto", 20)).grid(row = 15, column = 2)
+            CTkLabel(frame, text = '\n'+str(data['Number of transactions']), font = ("Roboto", 20)).grid(row = 15, column = 2, sticky = W)
 
             report =  get_report(name, gui = True)
             CTkLabel(frame, text = '\n\n\n').grid(row = 16,column = 1)
